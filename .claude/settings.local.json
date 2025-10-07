@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/GitRepos/Leash/**)",
+      "WebFetch(domain:www.courtlistener.com)",
+      "Read(//c/Users/tlewers/source/repos/court-listener-mcp-python/**)",
+      "WebFetch(domain:github.com)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

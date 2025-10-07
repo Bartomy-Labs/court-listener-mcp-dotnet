@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "duicXa0GeOc=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\tlewers\\source\\repos\\court-listener-mcp\\CourtListener.MCP.Server\\CourtListener.MCP.Server.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\tlewers\\.nuget\\packages\\microsoft.aspnetcore.openapi\\9.0.9\\microsoft.aspnetcore.openapi.9.0.9.nupkg.sha512",
+    "C:\\Users\\tlewers\\.nuget\\packages\\microsoft.openapi\\1.6.17\\microsoft.openapi.1.6.17.nupkg.sha512"
+  ],
+  "logs": []
+}
