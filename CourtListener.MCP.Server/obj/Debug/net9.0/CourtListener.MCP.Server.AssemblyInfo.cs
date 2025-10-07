@@ -10,10 +10,11 @@
 using System;
 using System.Reflection;
 
+[assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("3958e508-c350-4b37-a95f-54cecc051629")]
 [assembly: System.Reflection.AssemblyCompanyAttribute("CourtListener.MCP.Server")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f208a1ea440de4ad90be153477944b7d465ce281")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8731f84a5434fc8c29dd7307e94ab270d9e31874")]
 [assembly: System.Reflection.AssemblyProductAttribute("CourtListener.MCP.Server")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CourtListener.MCP.Server")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
