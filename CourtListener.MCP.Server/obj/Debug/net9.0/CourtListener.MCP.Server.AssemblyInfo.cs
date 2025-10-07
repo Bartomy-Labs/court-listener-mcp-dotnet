@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CourtListener.MCP.Server")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bc1c4270443958b7290c5d3c5b0a9a297f4eadf4")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a29517272063cbd1a9651089dc07fbab480c95e1")]
 [assembly: System.Reflection.AssemblyProductAttribute("CourtListener.MCP.Server")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CourtListener.MCP.Server")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -54,7 +54,7 @@ public class CourtListenerClient : ICourtListenerClient
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
-            var result = JsonSerializer.Deserialize<TResponse>(content);
+            var result = JsonSerializer.Deserialize<TResponse>(content, JsonSerializerConfig.Options);
 
             _logger.LogInformation(
                 "HTTP GET {Endpoint} completed successfully (Status: {StatusCode}, Duration: {Duration}ms, Size: {Size} bytes)",
@@ -124,7 +124,7 @@ public class CourtListenerClient : ICourtListenerClient
             response.EnsureSuccessStatusCode();
 
             var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
-            var result = JsonSerializer.Deserialize<TResponse>(responseContent);
+            var result = JsonSerializer.Deserialize<TResponse>(responseContent, JsonSerializerConfig.Options);
 
             _logger.LogInformation(
                 "HTTP POST {Endpoint} completed successfully (Status: {StatusCode}, Duration: {Duration}ms, Size: {Size} bytes)",
@@ -193,7 +193,7 @@ public class CourtListenerClient : ICourtListenerClient
             response.EnsureSuccessStatusCode();
 
             var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
-            var result = JsonSerializer.Deserialize<TResponse>(responseContent);
+            var result = JsonSerializer.Deserialize<TResponse>(responseContent, JsonSerializerConfig.Options);
 
             _logger.LogInformation(
                 "HTTP POST (form) {Endpoint} completed successfully (Status: {StatusCode}, Duration: {Duration}ms, Size: {Size} bytes)",
