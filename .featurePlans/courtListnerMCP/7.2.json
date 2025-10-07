@@ -1,0 +1,89 @@
+{
+  "taskId": "7.2",
+  "title": "Logging and Error Handling",
+  "phase": "7",
+  "phaseTitle": "Server Configuration & Startup",
+  "taskNumber": 2,
+  "totalTasksInPhase": 2,
+  "complexity": "moderate",
+  "objective": "Implement comprehensive logging and error handling with Serilog",
+
+  "contextManagement": {
+    "isFirstInPhase": false,
+    "isLastInPhase": true,
+    "requiresContextLoad": false,
+    "phaseBoundaryInstructions": "MANDATORY: After completing this task, create Phase 7 boundary summary and PAUSE for user approval before Phase 8"
+  },
+
+  "codebaseVerificationEvidence": {
+    "verifiedFiles": [
+      ".featurePlans/courtListnerMCP/CourtListnerMCPServer.md (lines 468-515)"
+    ],
+    "verifiedMethods": [],
+    "assumptionAudit": {
+      "assumptionLanguageDetected": false,
+      "assumptionCount": 0,
+      "confidence": "HIGH",
+      "notes": "All specifications verified. GAP #3 (Serilog) implemented."
+    }
+  },
+
+  "agentInstructions": "**OBJECTIVE**: Configure Serilog with Console and File sinks, plus global exception handler.\n\n**EXECUTION STEPS**:\n\n1. **Update appsettings.json** with Serilog config:\n   ```json\n   {\n     \"Serilog\": {\n       \"MinimumLevel\": {\n         \"Default\": \"Information\",\n         \"Override\": {\n           \"Microsoft\": \"Warning\",\n           \"System\": \"Warning\"\n         }\n       },\n       \"WriteTo\": [\n         {\n           \"Name\": \"Console\",\n           \"Args\": {\n             \"outputTemplate\": \"[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}\"\n           }\n         },\n         {\n           \"Name\": \"File\",\n           \"Args\": {\n             \"path\": \"logs/server-.log\",\n             \"rollingInterval\": \"Day\",\n             \"retainedFileCountLimit\": 7,\n             \"fileSizeLimitBytes\": 1048576,\n             \"formatter\": \"Serilog.Formatting.Json.JsonFormatter, Serilog\"\n           }\n         }\n       ],\n       \"Enrich\": [\"FromLogContext\", \"WithMachineName\", \"WithProcessId\"],\n       \"Properties\": {\n         \"Application\": \"CourtListenerMCP\"\n       }\n     }\n   }\n   ```\n\n2. **Create Global Exception Handler Middleware**:\n   ```csharp\n   public class ExceptionHandlingMiddleware\n   {\n       private readonly RequestDelegate _next;\n       private readonly ILogger<ExceptionHandlingMiddleware> _logger;\n       \n       public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)\n       {\n           _next = next;\n           _logger = logger;\n       }\n       \n       public async Task InvokeAsync(HttpContext context)\n       {\n           try\n           {\n               await _next(context);\n           }\n           catch (Exception ex)\n           {\n               _logger.LogError(ex, \"Unhandled exception occurred\");\n               context.Response.StatusCode = 500;\n               await context.Response.WriteAsJsonAsync(new\n               {\n                   Error = \"InternalServerError\",\n                   Message = \"An unexpected error occurred\",\n                   Timestamp = DateTime.UtcNow\n               });\n           }\n       }\n   }\n   ```\n\n3. **Register Middleware in Program.cs**:\n   ```csharp\n   app.UseMiddleware<ExceptionHandlingMiddleware>();\n   ```\n\n4. **Verify**:\n   - Console shows colored logs in dev\n   - Files rotate at 1MB\n   - Old logs deleted after 7 days\n   - Exceptions logged with context\n\n**DELIVERABLES**:\n- Serilog configured with Console + File sinks\n- File rotation (1MB, 7 days retention)\n- Global exception handler\n- Structured logging throughout\n\n**VERIFICATION CHECKLIST**:\n- [ ] Serilog configuration in appsettings.json\n- [ ] Console sink: formatted for readability\n- [ ] File sink: JSON format, logs/server.log\n- [ ] Rolling: 1MB size limit\n- [ ] Retention: 7 days\n- [ ] Exception middleware created\n- [ ] Middleware registered in Program.cs\n- [ ] Project builds successfully",
+
+  "successCriteria": [
+    "All operations logged with structured context",
+    "File logging with rotation configured correctly",
+    "Errors properly caught and logged with full context",
+    "Performance metrics captured for all API calls"
+  ],
+
+  "criticalAnchors": [
+    "Serilog with Console and File sinks (GAP #3)",
+    "Log path: logs/server.log",
+    "Rotation: 1 MB size",
+    "Retention: 1 week",
+    "Structured JSON logging in files",
+    "Console sink: formatted/colored for development"
+  ],
+
+  "associatedArtifacts": [
+    {
+      "type": "config",
+      "path": "CourtListener.MCP.Server/appsettings.json",
+      "description": "Serilog configuration"
+    },
+    {
+      "type": "class",
+      "path": "CourtListener.MCP.Server/Middleware/ExceptionHandlingMiddleware.cs",
+      "description": "Global exception handler"
+    }
+  },
+
+  "executionControls": {
+    "estimatedDuration": "15-20 minutes",
+    "requiresUserInput": false,
+    "canRunOffline": true,
+    "requiresExternalServices": false,
+    "prerequisiteTasks": ["7.1"],
+    "blockedBy": [],
+    "pauseBeforeExecution": false,
+    "pauseAfterExecution": true,
+    "pauseReason": "PHASE BOUNDARY - Phase 7 complete, create boundary summary and await user approval for Phase 8"
+  },
+
+  "gapDecisionReferences": [
+    {
+      "gapId": "GAP #3",
+      "gapTitle": "Logging Framework and Strategy",
+      "decision": "Serilog with Console and File Sinks",
+      "implementation": "Console sink for dev (formatted), File sink always (JSON, 1MB rotation, 7-day retention)"
+    }
+  ],
+
+  "metadata": {
+    "generatedAt": "2025-10-06T19:25:00Z",
+    "generatedBy": "L.E.A.S.H. Ingestion v3.2.0-git",
+    "planSource": ".featurePlans/courtListnerMCP/CourtListnerMCPServer.md",
+    "confidenceLevel": "HIGH"
+  }
+}

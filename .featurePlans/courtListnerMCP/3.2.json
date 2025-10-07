@@ -1,0 +1,82 @@
+{
+  "taskId": "3.2",
+  "title": "Docket Search Tools",
+  "phase": "3",
+  "phaseTitle": "Search Tools Implementation",
+  "taskNumber": 2,
+  "totalTasksInPhase": 3,
+  "complexity": "moderate",
+  "objective": "Implement docket search and docket-with-documents search tools following the SearchOpinions pattern",
+
+  "contextManagement": {
+    "isFirstInPhase": false,
+    "isLastInPhase": false,
+    "requiresContextLoad": false,
+    "phaseBoundaryInstructions": null
+  },
+
+  "codebaseVerificationEvidence": {
+    "verifiedFiles": [
+      ".featurePlans/courtListnerMCP/CourtListnerMCPServer.md (lines 246-271)"
+    ],
+    "verifiedMethods": [],
+    "assumptionAudit": {
+      "assumptionLanguageDetected": false,
+      "assumptionCount": 0,
+      "confidence": "HIGH",
+      "notes": "All specifications verified from plan document. Follows Task 3.1 pattern."
+    }
+  },
+
+  "agentInstructions": "**OBJECTIVE**: Implement two docket search tools following the pattern established in Task 3.1.\n\n**CRITICAL CONTEXT**: These tools follow the same pattern as SearchOpinions (PascalCase naming, structured errors, input validation).\n\n**PREREQUISITES**:\n- Task 3.1 completed (SearchTools.cs exists with SearchOpinions pattern)\n- Navigate to `CourtListener.MCP.Server/Tools/SearchTools.cs`\n\n**EXECUTION STEPS**:\n\n1. **Implement SearchDockets Method**:\n   - Add to existing `SearchTools.cs` class\n   - Method signature:\n     ```csharp\n     [McpServerTool]\n     [Description(\"Search court dockets and cases\")]\n     public async Task<object> SearchDockets(\n         [Description(\"Search query text\")] string query,\n         [Description(\"Court identifier\")] string? court = null,\n         [Description(\"Case name to search for\")] string? caseName = null,\n         [Description(\"Docket number\")] string? docketNumber = null,\n         [Description(\"Filed after date (YYYY-MM-DD)\")] string? dateFiledAfter = null,\n         [Description(\"Filed before date (YYYY-MM-DD)\")] string? dateFiledBefore = null,\n         [Description(\"Party name to filter by\")] string? partyName = null,\n         [Description(\"Sort order field\")] string? orderBy = null,\n         [Description(\"Maximum results to return\")] int limit = 20,\n         CancellationToken cancellationToken = default\n     )\n     ```\n   - Search type parameter: `type=d` (dockets)\n   - Endpoint: `/search/`\n\n2. **Input Validation** (same as SearchOpinions):\n   - Validate query not empty\n   - Validate limit (1-100 range)\n   - Validate date formats if provided\n   - Return ValidationError for invalid input\n\n3. **Build Query Parameters**:\n   - Add type: `type=d`\n   - Map parameters:\n     - `q` = query\n     - `court` = court\n     - `case_name` = caseName (will serialize to snake_case)\n     - `docket_number` = docketNumber (will serialize to snake_case)\n     - `date_filed_after` = dateFiledAfter\n     - `date_filed_before` = dateFiledBefore\n     - `party_name` = partyName\n     - `order_by` = orderBy\n     - `hit` = limit\n\n4. **Call API and Handle Errors**:\n   - Use ICourtListenerClient.GetAsync<DocketSearchResult>()\n   - Same error handling pattern as SearchOpinions:\n     - 404 → NotFound\n     - 401 → Unauthorized with suggestion\n     - 429 → RateLimited with retry guidance\n     - Validation → ValidationError\n     - General → ApiError with logging\n\n5. **Add Structured Logging**:\n   - Log request with query, court, limit\n   - Log success with result count\n   - Log errors with context\n\n6. **Implement SearchDocketsWithDocuments Method**:\n   - Add to `SearchTools.cs`\n   - Method signature (same parameters as SearchDockets):\n     ```csharp\n     [McpServerTool]\n     [Description(\"Search court dockets with up to 3 nested documents per docket\")]\n     public async Task<object> SearchDocketsWithDocuments(\n         [Description(\"Search query text\")] string query,\n         [Description(\"Court identifier\")] string? court = null,\n         [Description(\"Case name to search for\")] string? caseName = null,\n         [Description(\"Docket number\")] string? docketNumber = null,\n         [Description(\"Filed after date (YYYY-MM-DD)\")] string? dateFiledAfter = null,\n         [Description(\"Filed before date (YYYY-MM-DD)\")] string? dateFiledBefore = null,\n         [Description(\"Party name to filter by\")] string? partyName = null,\n         [Description(\"Sort order field\")] string? orderBy = null,\n         [Description(\"Maximum results to return\")] int limit = 20,\n         CancellationToken cancellationToken = default\n     )\n     ```\n   - **Key difference**: Search type parameter: `type=r` (dockets with RECAP documents)\n   - **Returns**: Dockets with up to 3 nested documents each\n   - **Note**: Response includes `more_docs` field if >3 documents exist\n\n7. **Implementation Details for SearchDocketsWithDocuments**:\n   - Same input validation as SearchDockets\n   - Build query parameters with `type=r`\n   - Use DocketSearchResult (same model, just includes nested documents)\n   - Same error handling pattern\n   - Add logging note about nested documents returned\n\n8. **Verify Implementation**:\n   - Run: `dotnet build`\n   - Verify: Both methods added to SearchTools.cs\n   - Verify: Tool names are `SearchDockets` and `SearchDocketsWithDocuments`\n   - Verify: Both have [McpServerTool] and [Description] attributes\n   - Verify: SearchDockets uses `type=d`\n   - Verify: SearchDocketsWithDocuments uses `type=r`\n   - Verify: All parameters have [Description] attributes\n   - Verify: Input validation implemented\n   - Verify: Error handling matches SearchOpinions pattern\n\n**DELIVERABLES**:\n- `SearchDockets` method in SearchTools.cs (type=d)\n- `SearchDocketsWithDocuments` method in SearchTools.cs (type=r)\n- Input validation for both tools\n- Error handling for both tools (same pattern as SearchOpinions)\n- Structured logging for both tools\n\n**VERIFICATION CHECKLIST**:\n- [ ] SearchDockets method added with [McpServerTool]\n- [ ] SearchDocketsWithDocuments method added with [McpServerTool]\n- [ ] Both methods have [Description] attributes\n- [ ] All parameters have [Description] attributes\n- [ ] SearchDockets uses search type: `type=d`\n- [ ] SearchDocketsWithDocuments uses search type: `type=r`\n- [ ] Input validation: query not empty\n- [ ] Input validation: limit 1-100\n- [ ] Input validation: date formats if provided\n- [ ] Error handling: 404, 401, 429, validation, general\n- [ ] Structured logging with query context\n- [ ] Parameters use camelCase (serialize to snake_case)\n- [ ] Return type: object (DocketSearchResult or ToolError)\n- [ ] Project builds successfully",
+
+  "successCriteria": [
+    "Both docket search variations working (regular and with documents)",
+    "Nested documents properly deserialized in SearchDocketsWithDocuments",
+    "`more_docs` field properly handled in response",
+    "All parameters correctly mapped to API (camelCase → snake_case)",
+    "Structured error responses for all error scenarios"
+  ],
+
+  "criticalAnchors": [
+    "Regular dockets MUST use: `type=d`",
+    "Dockets with documents MUST use: `type=r`",
+    "Tool names MUST be PascalCase: `SearchDockets`, `SearchDocketsWithDocuments`",
+    "Parameters MUST match SearchOpinions pattern (camelCase C#)",
+    "MUST validate input before API call",
+    "MUST return ToolError objects for errors (not exceptions)",
+    "SearchDocketsWithDocuments returns up to 3 nested documents per docket",
+    "`more_docs` field indicates if more documents exist beyond 3"
+  ],
+
+  "associatedArtifacts": [
+    {
+      "type": "method",
+      "path": "CourtListener.MCP.Server/Tools/SearchTools.cs",
+      "description": "SearchDockets method (type=d)"
+    },
+    {
+      "type": "method",
+      "path": "CourtListener.MCP.Server/Tools/SearchTools.cs",
+      "description": "SearchDocketsWithDocuments method (type=r, nested docs)"
+    }
+  ],
+
+  "executionControls": {
+    "estimatedDuration": "20-30 minutes",
+    "requiresUserInput": false,
+    "canRunOffline": true,
+    "requiresExternalServices": false,
+    "prerequisiteTasks": ["3.1"],
+    "blockedBy": [],
+    "pauseBeforeExecution": false,
+    "pauseAfterExecution": false
+  },
+
+  "metadata": {
+    "generatedAt": "2025-10-06T18:45:00Z",
+    "generatedBy": "L.E.A.S.H. Ingestion v3.2.0-git",
+    "planSource": ".featurePlans/courtListnerMCP/CourtListnerMCPServer.md",
+    "confidenceLevel": "HIGH"
+  }
+}

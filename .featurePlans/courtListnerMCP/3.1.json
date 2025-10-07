@@ -1,0 +1,99 @@
+{
+  "taskId": "3.1",
+  "title": "Opinion Search Tool",
+  "phase": "3",
+  "phaseTitle": "Search Tools Implementation",
+  "taskNumber": 1,
+  "totalTasksInPhase": 3,
+  "complexity": "complex",
+  "objective": "Implement search tool for legal opinions and court decisions with MCP attributes and structured error handling",
+
+  "contextManagement": {
+    "isFirstInPhase": true,
+    "isLastInPhase": false,
+    "requiresContextLoad": true,
+    "loadContextFrom": "ingestion_phaseBoundary_phase2_20251006.md",
+    "phaseBoundaryInstructions": null
+  },
+
+  "codebaseVerificationEvidence": {
+    "verifiedFiles": [
+      ".featurePlans/courtListnerMCP/CourtListnerMCPServer.md (lines 188-244)"
+    ],
+    "verifiedMethods": [],
+    "assumptionAudit": {
+      "assumptionLanguageDetected": false,
+      "assumptionCount": 0,
+      "confidence": "HIGH",
+      "notes": "All specifications verified from plan document. GAP #4 and #5 decisions integrated with test scenarios."
+    }
+  },
+
+  "agentInstructions": "**OBJECTIVE**: Implement the first MCP search tool with PascalCase naming and structured error handling, setting the pattern for all other tools.\n\n**CRITICAL CONTEXT**: This task implements:\n- GAP #5: PascalCase tool naming convention (SearchOpinions, not search_opinions)\n- GAP #4: Structured error responses (return ToolError, not exceptions)\n\n**PREREQUISITES**:\n- Phase 2 tasks completed (ICourtListenerClient, ToolError, models exist)\n- Navigate to `CourtListener.MCP.Server/Tools/` directory\n\n**EXECUTION STEPS**:\n\n1. **Create SearchTools Class**:\n   - Create file: `Tools/SearchTools.cs`\n   - Add class attribute: `[McpServerToolType]`\n   - Inject dependencies: `ICourtListenerClient`, `ILogger<SearchTools>`\n   - Constructor with dependency injection\n   - Namespace: `CourtListener.MCP.Server.Tools`\n\n2. **Implement SearchOpinions Method** (GAP #5: PascalCase naming):\n   - Method signature:\n     ```csharp\n     [McpServerTool]\n     [Description(\"Search legal opinions and court decisions from CourtListener API\")]\n     public async Task<object> SearchOpinions(\n         [Description(\"Search query text\")] string query,\n         [Description(\"Court identifier\")] string? court = null,\n         [Description(\"Case name to search for\")] string? caseName = null,\n         [Description(\"Judge name to filter by\")] string? judge = null,\n         [Description(\"Filed after date (YYYY-MM-DD)\")] string? filedAfter = null,\n         [Description(\"Filed before date (YYYY-MM-DD)\")] string? filedBefore = null,\n         [Description(\"Minimum citation count\")] int? citedGt = null,\n         [Description(\"Maximum citation count\")] int? citedLt = null,\n         [Description(\"Sort order field\")] string? orderBy = null,\n         [Description(\"Maximum results to return\")] int limit = 20,\n         CancellationToken cancellationToken = default\n     )\n     ```\n   - **CRITICAL**: Tool name exposed to MCP clients will be `SearchOpinions` (method name)\n   - **CRITICAL**: Parameters use camelCase (C# convention), will serialize to snake_case via global JSON policy\n\n3. **Implement Input Validation** (GAP #4: Validate before API call):\n   - Validate query is not null or empty:\n     ```csharp\n     if (string.IsNullOrWhiteSpace(query))\n     {\n         return new ToolError(\n             ErrorTypes.ValidationError,\n             \"Query parameter cannot be empty\",\n             \"Provide a search query term\"\n         );\n     }\n     ```\n   - Validate limit > 0 and <= 100:\n     ```csharp\n     if (limit <= 0 || limit > 100)\n     {\n         return new ToolError(\n             ErrorTypes.ValidationError,\n             \"Limit must be between 1 and 100\",\n             $\"Provided limit: {limit}\"\n         );\n     }\n     ```\n   - Validate date formats if provided (YYYY-MM-DD pattern)\n\n4. **Build Query Parameters**:\n   - Create Dictionary<string, string> for query parameters\n   - Add type parameter: `type=o` (opinions)\n   - Map limit to `hit` parameter (API expects 'hit' not 'limit')\n   - Add all optional parameters if provided:\n     - `q` = query\n     - `court` = court\n     - `case_name` = caseName\n     - `judge` = judge\n     - `filed_after` = filedAfter\n     - `filed_before` = filedBefore\n     - `cited_gt` = citedGt\n     - `cited_lt` = citedLt\n     - `order_by` = orderBy\n   - Note: Parameter names will be snake_case in query string (global JSON policy)\n\n5. **Call CourtListener API**:\n   - Endpoint: `/search/`\n   - Use ICourtListenerClient.GetAsync<OpinionSearchResult>()\n   - Include cancellationToken\n   - Log request with structured properties (query, params count)\n\n6. **Implement Error Handling** (GAP #4: Structured errors):\n   - Handle different HTTP status codes:\n     ```csharp\n     try\n     {\n         var result = await _client.GetAsync<OpinionSearchResult>(\"/search/\", cancellationToken);\n         \n         if (result == null)\n         {\n             return new ToolError(\n                 ErrorTypes.NotFound,\n                 \"No opinions found matching criteria\"\n             );\n         }\n         \n         return result;\n     }\n     catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)\n     {\n         return new ToolError(\n             ErrorTypes.Unauthorized,\n             \"Invalid API key\",\n             \"Check COURTLISTENER_API_KEY configuration\"\n         );\n     }\n     catch (HttpRequestException ex) when (ex.StatusCode == (HttpStatusCode)429)\n     {\n         return new ToolError(\n             ErrorTypes.RateLimited,\n             \"Rate limit exceeded\",\n             \"Retry after 60 seconds\"\n         );\n     }\n     catch (Exception ex)\n     {\n         _logger.LogError(ex, \"API error searching opinions\");\n         return new ToolError(\n             ErrorTypes.ApiError,\n             $\"API error: {ex.Message}\",\n             \"Check logs for details\"\n         );\n     }\n     ```\n\n7. **Add Structured Logging**:\n   - Log request start:\n     ```csharp\n     _logger.LogInformation(\n         \"Searching opinions: Query={Query}, Court={Court}, Limit={Limit}\",\n         query, court ?? \"all\", limit\n     );\n     ```\n   - Log successful response:\n     ```csharp\n     _logger.LogInformation(\n         \"Found {Count} opinions for query: {Query}\",\n         result.Count, query\n     );\n     ```\n   - Log errors with context\n\n8. **Verify Implementation**:\n   - Run: `dotnet build`\n   - Verify: No compilation errors\n   - Verify: [McpServerToolType] attribute on class\n   - Verify: [McpServerTool] attribute on method\n   - Verify: [Description] attributes on method and all parameters\n   - Verify: Tool name is `SearchOpinions` (PascalCase)\n   - Verify: Input validation before API call\n   - Verify: Structured error responses\n\n**DELIVERABLES**:\n- `Tools/SearchTools.cs` with [McpServerToolType] attribute\n- `SearchOpinions` method with [McpServerTool] attribute\n- Input validation (query not empty, limit valid, dates valid)\n- Error handling for 404, 401, 429, general errors\n- Structured logging for all operations\n- Return type: `object` (can be OpinionSearchResult or ToolError)\n\n**VERIFICATION CHECKLIST**:\n- [ ] SearchTools.cs class created with [McpServerToolType]\n- [ ] SearchOpinions method created with [McpServerTool]\n- [ ] Tool name: `SearchOpinions` (PascalCase, GAP #5)\n- [ ] Parameters use camelCase C# naming\n- [ ] [Description] attributes on method and all parameters\n- [ ] Input validation before API call\n- [ ] Query parameter validated (not empty)\n- [ ] Limit validated (1-100 range)\n- [ ] Date format validated if provided\n- [ ] Endpoint: `/search/` with `type=o`\n- [ ] Limit maps to `hit` query parameter\n- [ ] Error handling: 404 → NotFound\n- [ ] Error handling: 401 → Unauthorized with suggestion\n- [ ] Error handling: 429 → RateLimited with retry guidance\n- [ ] Error handling: Validation → ValidationError before API call\n- [ ] Error handling: General → ApiError with logging\n- [ ] Structured logging with query context\n- [ ] Return type: object (OpinionSearchResult or ToolError)\n- [ ] Project builds successfully",
+
+  "successCriteria": [
+    "Tool callable via MCP protocol with name `SearchOpinions`",
+    "All search parameters properly mapped to API (camelCase → snake_case)",
+    "Input validation prevents invalid API calls",
+    "Results properly deserialized and returned as OpinionSearchResult",
+    "Errors returned as structured ToolError objects (LLM-friendly)",
+    "Logging confirms successful searches with context",
+    "Test scenarios pass: NotFound for non-existent, Unauthorized for bad key, RateLimited for 429, ValidationError for bad input"
+  ],
+
+  "criticalAnchors": [
+    "MUST use [McpServerToolType] attribute on class",
+    "MUST use [McpServerTool] attribute on method",
+    "Tool name MUST be PascalCase: `SearchOpinions` (GAP #5 decision)",
+    "Parameters MUST use camelCase C# naming (serialize to snake_case)",
+    "Endpoint: `/api/rest/v4/search/`",
+    "Search type parameter: `type=o` for opinions",
+    "Limit parameter MUST map to `hit` in API",
+    "MUST validate input BEFORE making API call (GAP #4)",
+    "MUST return ToolError objects, NOT throw exceptions (GAP #4)",
+    "Error responses MUST include type, message, and suggestion",
+    "MUST use structured logging with Serilog properties",
+    "Return type: object (can be result model or ToolError)"
+  ],
+
+  "associatedArtifacts": [
+    {
+      "type": "class",
+      "path": "CourtListener.MCP.Server/Tools/SearchTools.cs",
+      "description": "MCP search tools class with SearchOpinions method"
+    }
+  ],
+
+  "executionControls": {
+    "estimatedDuration": "30-45 minutes",
+    "requiresUserInput": false,
+    "canRunOffline": true,
+    "requiresExternalServices": false,
+    "prerequisiteTasks": ["2.1", "2.2"],
+    "blockedBy": [],
+    "pauseBeforeExecution": false,
+    "pauseAfterExecution": false
+  },
+
+  "gapDecisionReferences": [
+    {
+      "gapId": "GAP #4",
+      "gapTitle": "MCP Tool Error Handling Strategy",
+      "decision": "Structured Error Objects (Not Exceptions)",
+      "implementation": "Return ToolError with type/message/suggestion; validate input before API calls; handle 404/401/429/500 with specific error types"
+    },
+    {
+      "gapId": "GAP #5",
+      "gapTitle": "MCP Tool Naming Convention",
+      "decision": "PascalCase Tool Naming (C# Idiomatic)",
+      "implementation": "Tool name: SearchOpinions (not search_opinions); method name = tool name; camelCase parameters"
+    }
+  ],
+
+  "metadata": {
+    "generatedAt": "2025-10-06T18:40:00Z",
+    "generatedBy": "L.E.A.S.H. Ingestion v3.2.0-git",
+    "planSource": ".featurePlans/courtListnerMCP/CourtListnerMCPServer.md",
+    "confidenceLevel": "HIGH"
+  }
+}

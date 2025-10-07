@@ -1,0 +1,79 @@
+{
+  "taskId": "5.1",
+  "title": "Citation Lookup Tools",
+  "phase": "5",
+  "phaseTitle": "Citation Tools",
+  "taskNumber": 1,
+  "totalTasksInPhase": 3,
+  "complexity": "moderate",
+  "objective": "Implement citation lookup using CourtListener API (POST form data)",
+
+  "contextManagement": {
+    "isFirstInPhase": true,
+    "isLastInPhase": false,
+    "requiresContextLoad": true,
+    "loadContextFrom": "ingestion_phaseBoundary_phase4_20251006.md",
+    "phaseBoundaryInstructions": null
+  },
+
+  "codebaseVerificationEvidence": {
+    "verifiedFiles": [
+      ".featurePlans/courtListnerMCP/CourtListnerMCPServer.md (lines 330-359)"
+    ],
+    "verifiedMethods": [],
+    "assumptionAudit": {
+      "assumptionLanguageDetected": false,
+      "assumptionCount": 0,
+      "confidence": "HIGH",
+      "notes": "All specifications verified from plan document. This task does NOT depend on CiteUrl.NET."
+    }
+  },
+
+  "agentInstructions": "**OBJECTIVE**: Implement API-based citation lookup tools using CourtListener's citation-lookup endpoint.\n\n**CRITICAL CONTEXT**: This task is independent of CiteUrl.NET library. Uses POST form data to CourtListener API.\n\n**PREREQUISITES**:\n- Phase 4 completed (tool patterns established)\n- ICourtListenerClient has PostFormAsync method (from Phase 2)\n- Navigate to `CourtListener.MCP.Server/Tools/` directory\n\n**EXECUTION STEPS**:\n\n1. **Create CitationTools Class**:\n   - Create file: `Tools/CitationTools.cs`\n   - Add class attribute: `[McpServerToolType]`\n   - Inject dependencies: `ICourtListenerClient`, `ILogger<CitationTools>`\n   - Constructor with dependency injection\n   - Namespace: `CourtListener.MCP.Server.Tools`\n\n2. **Implement LookupCitation Method**:\n   - Method signature:\n     ```csharp\n     [McpServerTool]\n     [Description(\"Look up a legal citation using CourtListener API\")]\n     public async Task<object> LookupCitation(\n         [Description(\"Legal citation to look up (e.g., '410 U.S. 113')\")] string citation,\n         CancellationToken cancellationToken = default\n     )\n     ```\n   - Input validation:\n     ```csharp\n     if (string.IsNullOrWhiteSpace(citation))\n     {\n         return new ToolError(\n             ErrorTypes.ValidationError,\n             \"Citation cannot be empty\"\n         );\n     }\n     ```\n   - Endpoint: POST `/citation-lookup/`\n   - Form data: `text={citation}`\n   - Build form data:\n     ```csharp\n     var formData = new Dictionary<string, string>\n     {\n         { \"text\", citation }\n     };\n     ```\n   - Call API:\n     ```csharp\n     var result = await _client.PostFormAsync<CitationLookupResult>(\n         \"/citation-lookup/\",\n         formData,\n         cancellationToken\n     );\n     ```\n   - Handle various citation formats (U.S. Reporter, Federal Reporter, etc.)\n   - Return: CitationLookupResult or ToolError\n\n3. **Implement BatchLookupCitations Method**:\n   - Method signature:\n     ```csharp\n     [McpServerTool]\n     [Description(\"Batch lookup multiple legal citations (max 100)\")]\n     public async Task<object> BatchLookupCitations(\n         [Description(\"Array of citations to look up\")] string[] citations,\n         CancellationToken cancellationToken = default\n     )\n     ```\n   - Input validation:\n     ```csharp\n     if (citations == null || citations.Length == 0)\n     {\n         return new ToolError(\n             ErrorTypes.ValidationError,\n             \"Citations array cannot be empty\"\n         );\n     }\n     \n     if (citations.Length > 100)\n     {\n         return new ToolError(\n             ErrorTypes.ValidationError,\n             \"Maximum 100 citations allowed per batch\",\n             $\"Provided: {citations.Length} citations\"\n         );\n     }\n     ```\n   - Join citations with spaces:\n     ```csharp\n     var combinedText = string.Join(\" \", citations);\n     ```\n   - Same endpoint: POST `/citation-lookup/`\n   - Form data: `text={combinedText}`\n   - Return: CitationLookupResult or ToolError\n\n4. **Error Handling for Both Methods**:\n   ```csharp\n   try\n   {\n       var result = await _client.PostFormAsync<CitationLookupResult>(\n           \"/citation-lookup/\",\n           formData,\n           cancellationToken\n       );\n       \n       if (result == null)\n       {\n           return new ToolError(\n               ErrorTypes.NotFound,\n               \"No matches found for citation(s)\"\n           );\n       }\n       \n       return result;\n   }\n   catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)\n   {\n       return new ToolError(\n           ErrorTypes.Unauthorized,\n           \"Invalid API key\",\n           \"Check COURTLISTENER_API_KEY configuration\"\n       );\n   }\n   catch (HttpRequestException ex) when (ex.StatusCode == (HttpStatusCode)429)\n   {\n       return new ToolError(\n           ErrorTypes.RateLimited,\n           \"Rate limit exceeded\",\n           \"Retry after 60 seconds\"\n       );\n   }\n   catch (Exception ex)\n   {\n       _logger.LogError(ex, \"API error looking up citation(s)\");\n       return new ToolError(\n           ErrorTypes.ApiError,\n           $\"API error: {ex.Message}\",\n           \"Check logs for details\"\n       );\n   }\n   ```\n\n5. **Structured Logging**:\n   - Log request:\n     ```csharp\n     _logger.LogInformation(\n         \"Looking up citation: {Citation}\",\n         citation\n     );\n     ```\n   - Log batch request:\n     ```csharp\n     _logger.LogInformation(\n         \"Batch lookup of {Count} citations\",\n         citations.Length\n     );\n     ```\n   - Log success with match count\n   - Log errors with context\n\n6. **Verify Implementation**:\n   - Run: `dotnet build`\n   - Verify: CitationTools.cs class created with [McpServerToolType]\n   - Verify: Both methods have [McpServerTool] attribute\n   - Verify: [Description] attributes on methods and parameters\n   - Verify: Tool names: `LookupCitation`, `BatchLookupCitations`\n   - Verify: POST to `/citation-lookup/` endpoint\n   - Verify: Form data format: `text={citation}`\n   - Verify: Batch limit validation (max 100)\n   - Verify: Error handling matches pattern\n\n**DELIVERABLES**:\n- `Tools/CitationTools.cs` with [McpServerToolType] attribute\n- `LookupCitation` method (single citation)\n- `BatchLookupCitations` method (up to 100 citations)\n- Input validation (citation not empty, batch max 100)\n- POST form data to `/citation-lookup/`\n- Error handling (NotFound, Unauthorized, RateLimited, ValidationError, ApiError)\n- Structured logging\n\n**VERIFICATION CHECKLIST**:\n- [ ] CitationTools.cs class created with [McpServerToolType]\n- [ ] LookupCitation method with [McpServerTool]\n- [ ] BatchLookupCitations method with [McpServerTool]\n- [ ] Both methods have [Description] attributes\n- [ ] All parameters have [Description] attributes\n- [ ] Tool names (PascalCase): LookupCitation, BatchLookupCitations\n- [ ] Endpoint: POST `/citation-lookup/`\n- [ ] Form data format: `text={citation}`\n- [ ] Batch joins citations with spaces\n- [ ] Batch limit validation (max 100)\n- [ ] Citation not empty validation\n- [ ] Error handling: 404, 401, 429, validation, general\n- [ ] Structured logging with citation context\n- [ ] Return type: object (CitationLookupResult or ToolError)\n- [ ] Project builds successfully",
+
+  "successCriteria": [
+    "Single citation lookup works via POST form data",
+    "Batch lookup handles multiple citations (max 100)",
+    "Citation formats properly recognized by API",
+    "Input validation prevents empty citations and oversized batches",
+    "Structured error responses for all error scenarios"
+  ],
+
+  "criticalAnchors": [
+    "Endpoint: POST `/citation-lookup/` (not GET)",
+    "MUST use form-encoded data: `text={citation}`",
+    "Batch MUST join citations with spaces",
+    "Batch MUST enforce max 100 citations",
+    "Tool names MUST be PascalCase: LookupCitation, BatchLookupCitations",
+    "MUST validate input before API call",
+    "MUST return ToolError objects for errors (not exceptions)",
+    "Authorization header required (Token {ApiKey})",
+    "This task does NOT depend on CiteUrl.NET library"
+  ],
+
+  "associatedArtifacts": [
+    {
+      "type": "class",
+      "path": "CourtListener.MCP.Server/Tools/CitationTools.cs",
+      "description": "MCP citation tools class with API-based lookup methods"
+    }
+  ],
+
+  "executionControls": {
+    "estimatedDuration": "20-30 minutes",
+    "requiresUserInput": false,
+    "canRunOffline": true,
+    "requiresExternalServices": false,
+    "prerequisiteTasks": ["2.1", "2.2"],
+    "blockedBy": [],
+    "pauseBeforeExecution": false,
+    "pauseAfterExecution": false
+  },
+
+  "metadata": {
+    "generatedAt": "2025-10-06T19:00:00Z",
+    "generatedBy": "L.E.A.S.H. Ingestion v3.2.0-git",
+    "planSource": ".featurePlans/courtListnerMCP/CourtListnerMCPServer.md",
+    "confidenceLevel": "HIGH"
+  }
+}

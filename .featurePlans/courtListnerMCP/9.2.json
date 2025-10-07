@@ -1,0 +1,77 @@
+{
+  "taskId": "9.2",
+  "title": "CI/CD and Release Preparation",
+  "phase": "9",
+  "phaseTitle": "Deployment & DevOps",
+  "taskNumber": 2,
+  "totalTasksInPhase": 2,
+  "complexity": "simple",
+  "objective": "Prepare for automated builds and releases",
+
+  "contextManagement": {
+    "isFirstInPhase": false,
+    "isLastInPhase": true,
+    "requiresContextLoad": false,
+    "phaseBoundaryInstructions": "MANDATORY: After completing this task, create Phase 9 boundary summary and PAUSE - this is the FINAL phase"
+  },
+
+  "codebaseVerificationEvidence": {
+    "verifiedFiles": [
+      ".featurePlans/courtListnerMCP/CourtListnerMCPServer.md (lines 624-646)"
+    ],
+    "verifiedMethods": [],
+    "assumptionAudit": {
+      "assumptionLanguageDetected": false,
+      "assumptionCount": 0,
+      "confidence": "HIGH",
+      "notes": "All specifications verified from plan document."
+    }
+  },
+
+  "agentInstructions": "**OBJECTIVE**: Create GitHub Actions CI/CD workflow and release preparation.\n\n**EXECUTION STEPS**:\n\n1. **Create .github/workflows/build.yml**:\n   ```yaml\n   name: Build and Test\n   \n   on:\n     push:\n       branches: [ master, main ]\n     pull_request:\n       branches: [ master, main ]\n   \n   jobs:\n     build:\n       runs-on: ubuntu-latest\n       steps:\n       - uses: actions/checkout@v4\n       - name: Setup .NET\n         uses: actions/setup-dotnet@v3\n         with:\n           dotnet-version: '9.0.x'\n       - name: Restore dependencies\n         run: dotnet restore\n       - name: Build\n         run: dotnet build --no-restore -c Release\n       - name: Test\n         run: dotnet test --no-build -c Release --verbosity normal\n   ```\n\n2. **Create Release Notes Template**:\n   - Create RELEASE_NOTES.md template\n   - Document versioning strategy\n   - List breaking changes format\n\n3. **Add Code Quality Checks**:\n   - dotnet format verification\n   - Code coverage report (optional)\n\n4. **Verify**:\n   - GitHub Actions workflow validates\n   - Tests run automatically on PR\n   - Build succeeds in CI\n\n**DELIVERABLES**:\n- .github/workflows/build.yml\n- RELEASE_NOTES.md template\n- Code quality checks\n\n**VERIFICATION CHECKLIST**:\n- [ ] GitHub Actions workflow created\n- [ ] Workflow runs on push and PR\n- [ ] Tests run automatically\n- [ ] .NET 9 configured\n- [ ] Release notes template created",
+
+  "successCriteria": [
+    "GitHub Actions build succeeds",
+    "Tests run automatically on PR",
+    "Code quality gates enforced",
+    "Release workflow documented"
+  ],
+
+  "criticalAnchors": [
+    "Target .NET 9",
+    "Run tests on all pushes",
+    "Enforce code formatting standards"
+  ],
+
+  "associatedArtifacts": [
+    {
+      "type": "file",
+      "path": ".github/workflows/build.yml",
+      "description": "GitHub Actions CI/CD workflow"
+    },
+    {
+      "type": "file",
+      "path": "RELEASE_NOTES.md",
+      "description": "Release notes template"
+    }
+  ],
+
+  "executionControls": {
+    "estimatedDuration": "15-20 minutes",
+    "requiresUserInput": false,
+    "canRunOffline": true,
+    "requiresExternalServices": false,
+    "prerequisiteTasks": ["9.1"],
+    "blockedBy": [],
+    "pauseBeforeExecution": false,
+    "pauseAfterExecution": true,
+    "pauseReason": "PHASE BOUNDARY - Phase 9 complete (FINAL PHASE), create boundary summary and FINALIZE"
+  },
+
+  "metadata": {
+    "generatedAt": "2025-10-06T19:45:00Z",
+    "generatedBy": "L.E.A.S.H. Ingestion v3.2.0-git",
+    "planSource": ".featurePlans/courtListnerMCP/CourtListnerMCPServer.md",
+    "confidenceLevel": "HIGH"
+  }
+}

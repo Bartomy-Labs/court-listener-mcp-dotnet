@@ -1,0 +1,74 @@
+{
+  "taskId": "6.1",
+  "title": "Status and Health Check Tools",
+  "phase": "6",
+  "phaseTitle": "System & Health Tools",
+  "taskNumber": 1,
+  "totalTasksInPhase": 1,
+  "complexity": "simple",
+  "objective": "Implement server status and health monitoring tools",
+
+  "contextManagement": {
+    "isFirstInPhase": true,
+    "isLastInPhase": true,
+    "requiresContextLoad": true,
+    "loadContextFrom": "ingestion_phaseBoundary_phase5_20251006.md",
+    "phaseBoundaryInstructions": "MANDATORY: After completing this task, create Phase 6 boundary summary and PAUSE for user approval before Phase 7"
+  },
+
+  "codebaseVerificationEvidence": {
+    "verifiedFiles": [
+      ".featurePlans/courtListnerMCP/CourtListnerMCPServer.md (lines 409-436)"
+    ],
+    "verifiedMethods": [],
+    "assumptionAudit": {
+      "assumptionLanguageDetected": false,
+      "assumptionCount": 0,
+      "confidence": "HIGH",
+      "notes": "All specifications verified from plan document."
+    }
+  },
+
+  "agentInstructions": "**OBJECTIVE**: Implement system status and health check tools for MCP server monitoring.\n\n**EXECUTION STEPS**:\n\n1. **Create SystemTools Class**:\n   - Create file: `Tools/SystemTools.cs`\n   - Add [McpServerToolType] attribute\n   - Inject: ICourtListenerClient, ILogger, IHostApplicationLifetime (for uptime)\n\n2. **Implement Status Method**:\n   ```csharp\n   [McpServerTool]\n   [Description(\"Get MCP server status, metrics, and configuration\")]\n   public Task<object> Status()\n   {\n       var process = Process.GetCurrentProcess();\n       var uptime = DateTime.Now - process.StartTime;\n       \n       return Task.FromResult<object>(new\n       {\n           Server = \"CourtListener MCP Server\",\n           Version = \"1.0.0\",\n           Framework = \".NET 9\",\n           Transport = \"HTTP\",\n           Endpoint = \"http://0.0.0.0:8000/mcp/\",\n           Status = \"Running\",\n           Uptime = $\"{uptime.Days}d {uptime.Hours}h {uptime.Minutes}m\",\n           Memory = new\n           {\n               WorkingSetMB = process.WorkingSet64 / 1024 / 1024,\n               PrivateMemoryMB = process.PrivateMemorySize64 / 1024 / 1024\n           },\n           Threads = process.Threads.Count,\n           ToolsAvailable = 19, // Update count\n           ApiBaseUrl = \"https://www.courtlistener.com/api/rest/v4/\"\n       });\n   }\n   ```\n\n3. **Implement GetApiStatus Method**:\n   ```csharp\n   [McpServerTool]\n   [Description(\"Check CourtListener API health and connectivity\")]\n   public async Task<object> GetApiStatus(CancellationToken cancellationToken = default)\n   {\n       try\n       {\n           var stopwatch = Stopwatch.StartNew();\n           var result = await _client.GetAsync<object>(\"/\", cancellationToken);\n           stopwatch.Stop();\n           \n           return new\n           {\n               ApiUrl = \"https://www.courtlistener.com/api/rest/v4/\",\n               Status = \"Healthy\",\n               ResponseTimeMs = stopwatch.ElapsedMilliseconds,\n               Timestamp = DateTime.UtcNow\n           };\n       }\n       catch (Exception ex)\n       {\n           return new ToolError(\n               ErrorTypes.ApiError,\n               $\"API health check failed: {ex.Message}\",\n               \"Check network connectivity and API key\"\n           );\n       }\n   }\n   ```\n\n4. **Implement HealthCheck Method**:\n   ```csharp\n   [McpServerTool]\n   [Description(\"Comprehensive health check of MCP server and dependencies\")]\n   public async Task<object> HealthCheck(CancellationToken cancellationToken = default)\n   {\n       var checks = new Dictionary<string, object>();\n       \n       // Server health\n       checks[\"Server\"] = new { Status = \"Healthy\", Message = \"MCP server is running\" };\n       \n       // API connectivity\n       try\n       {\n           await _client.GetAsync<object>(\"/\", cancellationToken);\n           checks[\"CourtListenerApi\"] = new { Status = \"Healthy\", Message = \"API is accessible\" };\n       }\n       catch (Exception ex)\n       {\n           checks[\"CourtListenerApi\"] = new { Status = \"Unhealthy\", Message = ex.Message };\n       }\n       \n       // Memory check\n       var process = Process.GetCurrentProcess();\n       var memoryMB = process.WorkingSet64 / 1024 / 1024;\n       checks[\"Memory\"] = new\n       {\n           Status = memoryMB < 500 ? \"Healthy\" : \"Warning\",\n           WorkingSetMB = memoryMB,\n           Threshold = 500\n       };\n       \n       return new\n       {\n           Overall = checks.All(c => ((dynamic)c.Value).Status == \"Healthy\") ? \"Healthy\" : \"Degraded\",\n           Checks = checks,\n           Timestamp = DateTime.UtcNow\n       };\n   }\n   ```\n\n5. **Verify Implementation**:\n   - Run: `dotnet build`\n   - Verify: SystemTools.cs with [McpServerToolType]\n   - Verify: All 3 methods with [McpServerTool]\n   - Verify: Tool names: Status, GetApiStatus, HealthCheck\n\n**DELIVERABLES**:\n- Tools/SystemTools.cs with 3 methods\n- Status(), GetApiStatus(), HealthCheck()\n- System metrics (uptime, memory, CPU, threads)\n- API health validation\n\n**VERIFICATION CHECKLIST**:\n- [ ] SystemTools.cs created with [McpServerToolType]\n- [ ] Status() method returns server info and metrics\n- [ ] GetApiStatus() validates API connectivity\n- [ ] HealthCheck() performs comprehensive checks\n- [ ] Project builds successfully\n\n**Total MCP Tools**: 21 (6 search + 6 get + 6 citation + 3 system)",
+
+  "successCriteria": [
+    "Status tool returns comprehensive server info",
+    "API health check validates connectivity",
+    "Metrics accurately reflect server state",
+    "All tools follow PascalCase naming"
+  ],
+
+  "criticalAnchors": [
+    "Match Python status tool response structure",
+    "Include transport type and port info",
+    "Report CourtListener API base URL",
+    "Use System.Diagnostics.Process for metrics"
+  ],
+
+  "associatedArtifacts": [
+    {
+      "type": "class",
+      "path": "CourtListener.MCP.Server/Tools/SystemTools.cs",
+      "description": "System and health check tools"
+    }
+  ],
+
+  "executionControls": {
+    "estimatedDuration": "15-20 minutes",
+    "requiresUserInput": false,
+    "canRunOffline": true,
+    "requiresExternalServices": false,
+    "prerequisiteTasks": ["2.1"],
+    "blockedBy": [],
+    "pauseBeforeExecution": false,
+    "pauseAfterExecution": true,
+    "pauseReason": "PHASE BOUNDARY - Phase 6 complete, create boundary summary and await user approval for Phase 7"
+  },
+
+  "metadata": {
+    "generatedAt": "2025-10-06T19:15:00Z",
+    "generatedBy": "L.E.A.S.H. Ingestion v3.2.0-git",
+    "planSource": ".featurePlans/courtListnerMCP/CourtListnerMCPServer.md",
+    "confidenceLevel": "HIGH"
+  }
+}

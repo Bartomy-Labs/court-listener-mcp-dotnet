@@ -1,0 +1,73 @@
+{
+  "taskId": "7.1",
+  "title": "ASP.NET Core MCP Server Setup",
+  "phase": "7",
+  "phaseTitle": "Server Configuration & Startup",
+  "taskNumber": 1,
+  "totalTasksInPhase": 2,
+  "complexity": "moderate",
+  "objective": "Configure ASP.NET Core application to host MCP server with HTTP transport",
+
+  "contextManagement": {
+    "isFirstInPhase": true,
+    "isLastInPhase": false,
+    "requiresContextLoad": true,
+    "loadContextFrom": "ingestion_phaseBoundary_phase6_20251006.md",
+    "phaseBoundaryInstructions": null
+  },
+
+  "codebaseVerificationEvidence": {
+    "verifiedFiles": [
+      ".featurePlans/courtListnerMCP/CourtListnerMCPServer.md (lines 438-466)"
+    ],
+    "verifiedMethods": [],
+    "assumptionAudit": {
+      "assumptionLanguageDetected": false,
+      "assumptionCount": 0,
+      "confidence": "HIGH",
+      "notes": "All specifications verified from plan document."
+    }
+  },
+
+  "agentInstructions": "**OBJECTIVE**: Configure Program.cs to host MCP server with all tools and services.\n\n**EXECUTION STEPS**:\n\n1. **Configure Program.cs**:\n   ```csharp\n   using CourtListener.MCP.Server.Configuration;\n   using CourtListener.MCP.Server.Tools;\n   using Serilog;\n   \n   var builder = WebApplication.CreateBuilder(args);\n   \n   // Configure Serilog\n   builder.Host.UseSerilog((context, config) =>\n   {\n       config\n           .ReadFrom.Configuration(context.Configuration)\n           .Enrich.FromLogContext()\n           .Enrich.WithMachineName()\n           .Enrich.WithProcessId()\n           .WriteTo.Console()\n           .WriteTo.File(\"logs/server.log\",\n               rollingInterval: RollingInterval.Day,\n               retainedFileCountLimit: 7);\n   });\n   \n   // Add services\n   builder.Services.AddCourtListenerClient(builder.Configuration);\n   builder.Services.ConfigureJsonOptions();\n   \n   // Add MCP server\n   builder.Services.AddMcpServer()\n       .WithToolsFromAssembly(typeof(Program).Assembly);\n   \n   // Configure Kestrel\n   builder.WebHost.ConfigureKestrel(options =>\n   {\n       options.ListenAnyIP(8000); // 0.0.0.0:8000\n   });\n   \n   var app = builder.Build();\n   \n   // Map MCP endpoint\n   app.MapMcp(\"/mcp/\");\n   \n   app.Run();\n   ```\n\n2. **Verify**:\n   - Run: `dotnet build`\n   - Endpoint: http://0.0.0.0:8000/mcp/\n   - All 21 tools discoverable\n   - Logging configured\n\n**DELIVERABLES**:\n- Configured Program.cs\n- MCP server on port 8000\n- All tools registered\n\n**VERIFICATION CHECKLIST**:\n- [ ] Program.cs configured\n- [ ] Endpoint: http://0.0.0.0:8000/mcp/\n- [ ] All tools registered via WithToolsFromAssembly()\n- [ ] Serilog configured\n- [ ] Project builds successfully",
+
+  "successCriteria": [
+    "Server starts successfully",
+    "MCP endpoint accessible at http://localhost:8000/mcp/",
+    "All tools discoverable via MCP protocol",
+    "Logging confirms server initialization"
+  ],
+
+  "criticalAnchors": [
+    "Endpoint: http://0.0.0.0:8000/mcp/",
+    "Match Python transport configuration",
+    "Use ASP.NET Core dependency injection",
+    "Host: 0.0.0.0 (accept external connections)"
+  ],
+
+  "associatedArtifacts": [
+    {
+      "type": "file",
+      "path": "CourtListener.MCP.Server/Program.cs",
+      "description": "ASP.NET Core startup configuration"
+    }
+  ],
+
+  "executionControls": {
+    "estimatedDuration": "15-20 minutes",
+    "requiresUserInput": false,
+    "canRunOffline": true,
+    "requiresExternalServices": false,
+    "prerequisiteTasks": ["1.1", "1.2", "2.1"],
+    "blockedBy": [],
+    "pauseBeforeExecution": false,
+    "pauseAfterExecution": false
+  },
+
+  "metadata": {
+    "generatedAt": "2025-10-06T19:20:00Z",
+    "generatedBy": "L.E.A.S.H. Ingestion v3.2.0-git",
+    "planSource": ".featurePlans/courtListnerMCP/CourtListnerMCPServer.md",
+    "confidenceLevel": "HIGH"
+  }
+}
