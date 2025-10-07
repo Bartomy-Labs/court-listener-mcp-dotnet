@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CourtListener.MCP.Server")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1a1ed30d8e3c18a3e1f9bf0e8e2db1528abeabf0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f208a1ea440de4ad90be153477944b7d465ce281")]
 [assembly: System.Reflection.AssemblyProductAttribute("CourtListener.MCP.Server")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CourtListener.MCP.Server")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
