@@ -6,33 +6,33 @@
   "git_config": {
     "scope_pattern": ". ':!./featurePlan/**/ingestion_*'",
     "scope_description": "All files except ingestion_* prefixed",
-    "last_commit_hash": "ef3bd5e",
-    "last_commit_timestamp": "2025-10-06T02:30:00Z"
+    "last_commit_hash": "97ab0805133ff4979424cb434124f59e0032badd",
+    "last_commit_timestamp": "2025-10-07T00:00:00Z"
   },
   "task_state": {
-    "current_task_id": "2.2",
+    "current_task_id": "3.2",
     "last_task_status": "completed",
-    "task_start_timestamp": "2025-10-06T02:00:00Z",
-    "task_completion_timestamp": "2025-10-06T02:30:00Z",
-    "expected_next_task_id": "3.1",
+    "task_start_timestamp": "2025-10-07T00:00:00Z",
+    "task_completion_timestamp": "2025-10-07T00:00:00Z",
+    "expected_next_task_id": "3.3",
     "task_directory": "C:\\Users\\tlewers\\source\\repos\\court-listener-mcp\\.featurePlans\\courtListnerMCP"
   },
   "checkpoint_state": {
     "last_checkpoint_timestamp": "2025-10-06T02:30:00Z",
-    "tasks_since_checkpoint": 5,
-    "files_read_since_checkpoint": 12,
-    "artifacts_created_since_checkpoint": 25,
-    "conversation_turns_since_checkpoint": 5
+    "tasks_since_checkpoint": 7,
+    "files_read_since_checkpoint": 16,
+    "artifacts_created_since_checkpoint": 27,
+    "conversation_turns_since_checkpoint": 7
   },
   "interruption_detection": {
     "auto_compact_count": 0,
-    "last_git_check_timestamp": "2025-10-06T00:00:00Z",
+    "last_git_check_timestamp": "2025-10-07T00:00:00Z",
     "git_state_at_last_check": "clean",
     "out_of_scope_warning_shown": false
   },
   "context_tracking": {
-    "last_task_directory": null,
-    "last_task_id": null,
+    "last_task_directory": "C:\\Users\\tlewers\\source\\repos\\court-listener-mcp\\.featurePlans\\courtListnerMCP",
+    "last_task_id": "3.2",
     "context_switches_count": 0,
     "last_context_switch_timestamp": null,
     "last_context_switch_reason": null
