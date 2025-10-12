@@ -338,4 +338,193 @@ public class CitationTools
             ));
         }
     }
+
+    /// <summary>
+    /// Extract all citations from a text block using CiteUrl.NET YAML templates.
+    /// </summary>
+    [McpServerTool(Name = "extract_citations_from_text", ReadOnly = true, Idempotent = true)]
+    [Description("Extract all citations from a text block using CiteUrl.NET YAML templates")]
+    public Task<object> ExtractCitationsFromText(
+        [Description("Text block to extract citations from")] string text,
+        CancellationToken cancellationToken = default)
+    {
+        // Input validation
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return Task.FromResult<object>(new ToolError(
+                ErrorTypes.ValidationError,
+                "Text cannot be empty",
+                "Provide text to extract citations from"
+            ));
+        }
+
+        // Log request
+        _logger.LogInformation(
+            "Extracting citations from text (length: {Length} characters)",
+            text.Length
+        );
+
+        try
+        {
+            // Use CiteUrl.NET Citator to extract all citations (.NET uses PascalCase: ListCitations)
+            var citations = Citator.ListCitations(text);
+
+            if (citations == null || !citations.Any())
+            {
+                _logger.LogInformation("No citations found in text");
+
+                return Task.FromResult<object>(new
+                {
+                    TextPreview = text.Length > 100 ? text.Substring(0, 100) + "..." : text,
+                    TextLength = text.Length,
+                    CitationsFound = 0,
+                    Citations = new List<object>()
+                });
+            }
+
+            // Build results from found citations
+            var results = citations.Select(cite => new
+            {
+                Citation = cite.Text,
+                TemplateName = cite.Template.Name,
+                Tokens = cite.Tokens,
+                Url = cite.Url,
+                Name = cite.Name
+            }).ToList();
+
+            // Log success
+            _logger.LogInformation(
+                "Extracted {Count} citations from text",
+                results.Count
+            );
+
+            return Task.FromResult<object>(new
+            {
+                TextPreview = text.Length > 100 ? text.Substring(0, 100) + "..." : text,
+                TextLength = text.Length,
+                CitationsFound = results.Count,
+                Citations = results
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error extracting citations from text");
+            return Task.FromResult<object>(new ToolError(
+                ErrorTypes.ApiError,
+                $"Extraction error: {ex.Message}",
+                "Check logs for details"
+            ));
+        }
+    }
+
+    /// <summary>
+    /// Enhanced citation lookup combining CiteUrl.NET validation with CourtListener API data.
+    /// </summary>
+    [McpServerTool(Name = "enhanced_citation_lookup", ReadOnly = true, Idempotent = true)]
+    [Description("Enhanced citation lookup combining CiteUrl.NET validation with CourtListener API data")]
+    public async Task<object> EnhancedCitationLookup(
+        [Description("Citation to look up")] string citation,
+        CancellationToken cancellationToken = default)
+    {
+        // Input validation
+        if (string.IsNullOrWhiteSpace(citation))
+        {
+            return new ToolError(
+                ErrorTypes.ValidationError,
+                "Citation cannot be empty",
+                "Provide a valid legal citation"
+            );
+        }
+
+        // Log request
+        _logger.LogInformation("Enhanced lookup for citation: {Citation}", citation);
+
+        try
+        {
+            // Step 1: Validate and parse with CiteUrl.NET
+            var parsed = Citator.Cite(citation);
+
+            object? validationData = null;
+            if (parsed != null)
+            {
+                validationData = new
+                {
+                    IsValid = true,
+                    Format = parsed.Template.Name,
+                    MatchedText = parsed.Text,
+                    Tokens = parsed.Tokens,
+                    Url = parsed.Url
+                };
+
+                _logger.LogInformation(
+                    "Citation validated: {Citation} matches {Format}",
+                    citation,
+                    parsed.Template.Name
+                );
+            }
+            else
+            {
+                validationData = new
+                {
+                    IsValid = false,
+                    Message = "No matching citation format found"
+                };
+
+                _logger.LogWarning("Citation format not recognized: {Citation}", citation);
+            }
+
+            // Step 2: Lookup in CourtListener API
+            var formData = new Dictionary<string, string>
+            {
+                { "text", citation }
+            };
+
+            var apiResult = await _client.PostFormAsync<CitationLookupResult>(
+                "citation-lookup/",
+                formData,
+                cancellationToken
+            );
+
+            // Step 3: Combine results
+            _logger.LogInformation(
+                "Enhanced lookup complete: validation={Validated}, matches={MatchCount}",
+                parsed != null,
+                apiResult?.Matches?.Count ?? 0
+            );
+
+            return new
+            {
+                Citation = citation,
+                Validation = validationData,
+                CourtListenerData = apiResult
+            };
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            _logger.LogWarning("Unauthorized API access during enhanced lookup");
+            return new ToolError(
+                ErrorTypes.Unauthorized,
+                "Invalid API key",
+                "Check COURTLISTENER_API_KEY configuration"
+            );
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == (HttpStatusCode)429)
+        {
+            _logger.LogWarning("Rate limit exceeded during enhanced lookup");
+            return new ToolError(
+                ErrorTypes.RateLimited,
+                "Rate limit exceeded",
+                "Retry after 60 seconds"
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in enhanced citation lookup: {Citation}", citation);
+            return new ToolError(
+                ErrorTypes.ApiError,
+                $"Lookup error: {ex.Message}",
+                "Check logs for details"
+            );
+        }
+    }
 }
