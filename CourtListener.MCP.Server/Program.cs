@@ -1,4 +1,5 @@
 using CourtListener.MCP.Server.Configuration;
+using CourtListener.MCP.Server.Middleware;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,6 +30,9 @@ builder.WebHost.ConfigureKestrel(options =>
 });
 
 var app = builder.Build();
+
+// Add global exception handling middleware
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Map MCP endpoint
 app.MapMcp("/mcp/");
