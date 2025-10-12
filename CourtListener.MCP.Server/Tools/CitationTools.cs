@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Net;
+using CiteUrl.Core.Templates;
 using CourtListener.MCP.Server.Models.Citations;
 using CourtListener.MCP.Server.Models.Errors;
 using CourtListener.MCP.Server.Services;
@@ -202,6 +203,139 @@ public class CitationTools
                 $"API error: {ex.Message}",
                 "Check logs for details"
             );
+        }
+    }
+
+    /// <summary>
+    /// Verify citation format using CiteUrl.NET template system.
+    /// </summary>
+    [McpServerTool(Name = "verify_citation_format", ReadOnly = true, Idempotent = true)]
+    [Description("Verify citation format using CiteUrl.NET template system")]
+    public Task<object> VerifyCitationFormat(
+        [Description("Citation to verify")] string citation,
+        CancellationToken cancellationToken = default)
+    {
+        // Input validation
+        if (string.IsNullOrWhiteSpace(citation))
+        {
+            return Task.FromResult<object>(new ToolError(
+                ErrorTypes.ValidationError,
+                "Citation cannot be empty",
+                "Provide a valid citation to verify"
+            ));
+        }
+
+        // Log request
+        _logger.LogInformation("Verifying citation format: {Citation}", citation);
+
+        try
+        {
+            // Use CiteUrl.NET Citator to find matching citation
+            var citedCitation = Citator.Cite(citation);
+
+            if (citedCitation != null)
+            {
+                _logger.LogInformation(
+                    "Citation format verified: {Citation} matches {Format}",
+                    citation,
+                    citedCitation.Template.Name
+                );
+
+                return Task.FromResult<object>(new
+                {
+                    IsValid = true,
+                    Citation = citation,
+                    Format = citedCitation.Template.Name,
+                    MatchedText = citedCitation.Text
+                });
+            }
+            else
+            {
+                _logger.LogWarning("No matching citation format found for: {Citation}", citation);
+
+                return Task.FromResult<object>(new
+                {
+                    IsValid = false,
+                    Citation = citation,
+                    Message = "No matching citation format found"
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error verifying citation format: {Citation}", citation);
+            return Task.FromResult<object>(new ToolError(
+                ErrorTypes.ApiError,
+                $"Validation error: {ex.Message}",
+                "Check logs for details"
+            ));
+        }
+    }
+
+    /// <summary>
+    /// Parse citation into structured components using CiteUrl.NET.
+    /// </summary>
+    [McpServerTool(Name = "parse_citation", ReadOnly = true, Idempotent = true)]
+    [Description("Parse citation into structured components using CiteUrl.NET")]
+    public Task<object> ParseCitation(
+        [Description("Citation to parse")] string citation,
+        CancellationToken cancellationToken = default)
+    {
+        // Input validation
+        if (string.IsNullOrWhiteSpace(citation))
+        {
+            return Task.FromResult<object>(new ToolError(
+                ErrorTypes.ValidationError,
+                "Citation cannot be empty",
+                "Provide a valid citation to parse"
+            ));
+        }
+
+        // Log request
+        _logger.LogInformation("Parsing citation: {Citation}", citation);
+
+        try
+        {
+            // Use CiteUrl.NET Citator to parse citation
+            var parsed = Citator.Cite(citation);
+
+            if (parsed != null)
+            {
+                _logger.LogInformation(
+                    "Citation parsed successfully: {Citation}",
+                    citation
+                );
+
+                // Build result from citation tokens and properties
+                return Task.FromResult<object>(new
+                {
+                    Citation = citation,
+                    MatchedText = parsed.Text,
+                    TemplateName = parsed.Template.Name,
+                    Tokens = parsed.Tokens,
+                    Url = parsed.Url,
+                    Name = parsed.Name
+                });
+            }
+            else
+            {
+                _logger.LogWarning("Could not parse citation: {Citation}", citation);
+
+                return Task.FromResult<object>(new ToolError(
+                    ErrorTypes.ValidationError,
+                    "Could not parse citation",
+                    "Citation format may be invalid or unsupported"
+                ));
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error parsing citation: {Citation}", citation);
+            return Task.FromResult<object>(new ToolError(
+                ErrorTypes.ApiError,
+                $"Parse error: {ex.Message}",
+                "Check logs for details"
+            ));
         }
     }
 }
