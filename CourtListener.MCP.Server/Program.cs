@@ -1,41 +1,40 @@
+using CourtListener.MCP.Server.Configuration;
+using Serilog;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+// Configure Serilog
+builder.Host.UseSerilog((context, config) =>
+{
+    config
+        .ReadFrom.Configuration(context.Configuration)
+        .Enrich.FromLogContext()
+        .WriteTo.Console()
+        .WriteTo.File("logs/server.log",
+            rollingInterval: RollingInterval.Day,
+            retainedFileCountLimit: 7);
+});
+
+// Add CourtListener HTTP client
+builder.Services.AddCourtListenerClient(builder.Configuration);
+
+// Add MCP server with all tools from assembly
+builder.Services.AddMcpServer()
+    .WithToolsFromAssembly(typeof(Program).Assembly);
+
+// Configure Kestrel to listen on 0.0.0.0:8000
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(8000); // HTTP on 0.0.0.0:8000
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+// Map MCP endpoint
+app.MapMcp("/mcp/");
 
-app.UseHttpsRedirection();
-
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+// Log startup
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
+logger.LogInformation("CourtListener MCP Server starting on http://0.0.0.0:8000/mcp/");
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
