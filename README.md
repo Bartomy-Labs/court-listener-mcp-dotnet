@@ -280,6 +280,180 @@ Response:
 }
 ```
 
+## 🔍 Testing with MCP Inspector
+
+The **MCP Inspector** is an interactive tool for testing and debugging MCP servers. It provides a web-based interface to explore available tools, test tool calls, and inspect responses.
+
+### Installing MCP Inspector
+
+```bash
+# Install globally with npm
+npm install -g @modelcontextprotocol/inspector
+
+# Or use npx (no installation required)
+npx @modelcontextprotocol/inspector
+```
+
+### Connecting to the Server
+
+1. **Start the CourtListener MCP Server**:
+   ```bash
+   cd CourtListener.MCP.Server
+   dotnet run
+   ```
+
+   Server will be available at `http://localhost:8000/mcp/`
+
+2. **Launch MCP Inspector**:
+   ```bash
+   npx @modelcontextprotocol/inspector
+   ```
+
+   The inspector will open in your browser (typically `http://localhost:5173`)
+
+3. **Connect to Server**:
+   - In the MCP Inspector UI, enter the server URL: `http://localhost:8000/mcp/`
+   - Click "Connect"
+   - The inspector will discover all 21 available tools
+
+### Using the Inspector
+
+#### Discover Available Tools
+
+Once connected, the inspector displays all tools organized by category:
+- **Search Tools** (6): search_opinions, search_dockets, etc.
+- **Get Tools** (6): get_opinion, get_docket, etc.
+- **Citation Tools** (6): lookup_citation, verify_citation_format, etc.
+- **System Tools** (3): status, get_api_status, health_check
+
+#### Test a Tool
+
+**Example: Testing the `status` tool**
+
+1. Select `status` from the tools list
+2. No parameters required
+3. Click "Execute"
+4. Inspect the JSON response:
+   ```json
+   {
+     "Server": "CourtListener MCP Server",
+     "Version": "1.0.0",
+     "Framework": ".NET 9",
+     "Transport": "HTTP",
+     "Endpoint": "http://0.0.0.0:8000/mcp/",
+     "Status": "Running",
+     "Uptime": "0d 0h 5m 32s",
+     "ToolsAvailable": 21
+   }
+   ```
+
+**Example: Testing the `search_opinions` tool**
+
+1. Select `search_opinions` from the tools list
+2. Fill in parameters:
+   - `query`: "habeas corpus"
+   - `court`: "scotus"
+   - `limit`: 5
+3. Click "Execute"
+4. Inspect the search results with opinion metadata
+
+**Example: Testing the `lookup_citation` tool**
+
+1. Select `lookup_citation` from the tools list
+2. Fill in parameter:
+   - `citation`: "410 U.S. 113"
+3. Click "Execute"
+4. View the matched case details (Roe v. Wade)
+
+#### Debug Issues
+
+The inspector shows:
+- **Request**: Exact JSON sent to the tool
+- **Response**: Complete response including errors
+- **Timing**: Request/response duration
+- **Errors**: Structured error messages with suggestions
+
+**Example Error Response**:
+```json
+{
+  "Error": "Unauthorized",
+  "Message": "Invalid API key",
+  "Suggestion": "Check COURTLISTENER_API_KEY configuration"
+}
+```
+
+### Inspector Features
+
+- **Tool Discovery**: Automatically finds all available tools
+- **Parameter Validation**: Shows required vs optional parameters
+- **Response Inspection**: Pretty-printed JSON with syntax highlighting
+- **Error Debugging**: Clear error messages with context
+- **Request History**: Review previous tool calls
+- **Live Reload**: Reconnects automatically if server restarts
+
+### Troubleshooting with Inspector
+
+#### Inspector Can't Connect
+
+**Problem**: "Failed to connect to http://localhost:8000/mcp/"
+
+**Solutions**:
+1. Verify server is running: `curl http://localhost:8000/health`
+2. Check server logs for startup errors
+3. Ensure port 8000 is not blocked by firewall
+4. Try explicit IP: `http://127.0.0.1:8000/mcp/`
+
+#### Tool Returns Error
+
+**Problem**: Tool returns "Unauthorized" error
+
+**Solution**: Configure API key:
+```bash
+dotnet user-secrets set "CourtListener:ApiKey" "your-api-key-here"
+```
+
+**Problem**: Tool returns "ValidationError"
+
+**Solution**: Check parameter formats in inspector:
+- Dates must be `YYYY-MM-DD` format
+- Limit must be 1-100
+- Query parameter cannot be empty
+
+#### No Tools Discovered
+
+**Problem**: Inspector shows "No tools available"
+
+**Solutions**:
+1. Verify server started successfully (check console output)
+2. Check server logs for tool registration errors
+3. Ensure MCP endpoint is `/mcp/` not just `/`
+4. Restart server and reconnect inspector
+
+### Testing Workflow
+
+1. **Start Server**: `dotnet run` in CourtListener.MCP.Server
+2. **Launch Inspector**: `npx @modelcontextprotocol/inspector`
+3. **Connect**: Enter `http://localhost:8000/mcp/`
+4. **Test Health**: Run `status` tool to verify connectivity
+5. **Test Search**: Try `search_opinions` with a simple query
+6. **Test Citation**: Try `lookup_citation` with "410 U.S. 113"
+7. **Check Logs**: Review server console for request/response logging
+8. **Debug Errors**: Use inspector error messages to troubleshoot
+
+### Inspector vs Production Clients
+
+**MCP Inspector** (Development):
+- Interactive web UI
+- Manual tool testing
+- Visual response inspection
+- Development/debugging
+
+**MCP SDK Clients** (Production):
+- Programmatic access
+- Automated tool calls
+- Integration with LLMs
+- Production applications
+
 ## 🐳 Docker Setup
 
 ### Build and Run with Docker
