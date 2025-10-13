@@ -21,6 +21,7 @@ builder.Services.AddCourtListenerClient(builder.Configuration);
 
 // Add MCP server with all tools from assembly
 builder.Services.AddMcpServer()
+    .WithHttpTransport()
     .WithToolsFromAssembly(typeof(Program).Assembly);
 
 // Configure Kestrel to listen on 0.0.0.0:8000
