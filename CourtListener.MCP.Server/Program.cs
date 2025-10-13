@@ -13,16 +13,10 @@ if (apiKeyArg >= 0 && apiKeyArg + 1 < args.Length)
     builder.Configuration["CourtListener:ApiKey"] = apiKey;
 }
 
-// Configure Serilog
+// Configure Serilog (reads configuration from appsettings.json)
 builder.Host.UseSerilog((context, config) =>
 {
-    config
-        .ReadFrom.Configuration(context.Configuration)
-        .Enrich.FromLogContext()
-        .WriteTo.Console()
-        .WriteTo.File("logs/server.log",
-            rollingInterval: RollingInterval.Day,
-            retainedFileCountLimit: 7);
+    config.ReadFrom.Configuration(context.Configuration);
 });
 
 // Add CourtListener HTTP client

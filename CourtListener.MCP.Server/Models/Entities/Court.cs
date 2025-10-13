@@ -16,5 +16,5 @@ public class Court
     public bool? InUse { get; set; }
     public bool? HasOpinionScraper { get; set; }
     public bool? HasOralArgumentScraper { get; set; }
-    public int? Position { get; set; }
+    public decimal? Position { get; set; }  // API returns decimal (e.g., 1.0) not integer
 }
