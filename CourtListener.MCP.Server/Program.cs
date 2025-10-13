@@ -34,6 +34,14 @@ var app = builder.Build();
 // Add global exception handling middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
+// Map health check endpoint for Docker
+app.MapGet("/health", () => Results.Ok(new
+{
+    Status = "Healthy",
+    Server = "CourtListener MCP Server",
+    Timestamp = DateTime.UtcNow
+}));
+
 // Map MCP endpoint
 app.MapMcp("/mcp/");
 

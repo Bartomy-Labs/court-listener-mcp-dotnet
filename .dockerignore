@@ -1,0 +1,48 @@
+# Build artifacts
+**/bin/
+**/obj/
+**/out/
+
+# IDE and editor files
+**/.vs/
+**/.vscode/
+**/.idea/
+**/*.user
+**/*.suo
+
+# Test results
+**/TestResults/
+
+# Logs
+**/logs/
+*.log
+
+# NuGet packages
+*.nupkg
+*.snupkg
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# Documentation (not needed in image)
+*.md
+!README.md
+
+# Feature plans and orchestrator files
+.featurePlans/
+.orchestrators/
+
+# Environment files (secrets should be passed via environment variables)
+.env
+.env.*
+
+# Docker files (no need to copy these into the image)
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# OS files
+.DS_Store
+Thumbs.db
