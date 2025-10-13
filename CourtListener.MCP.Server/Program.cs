@@ -4,6 +4,15 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Parse command-line arguments for API key
+// Supports: --api-key YOUR_KEY or --CourtListener:ApiKey YOUR_KEY
+var apiKeyArg = Array.FindIndex(args, a => a == "--api-key" || a == "--apikey");
+if (apiKeyArg >= 0 && apiKeyArg + 1 < args.Length)
+{
+    var apiKey = args[apiKeyArg + 1];
+    builder.Configuration["CourtListener:ApiKey"] = apiKey;
+}
+
 // Configure Serilog
 builder.Host.UseSerilog((context, config) =>
 {

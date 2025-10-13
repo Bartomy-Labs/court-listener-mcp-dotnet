@@ -143,6 +143,32 @@ Server endpoints:
 - **MCP Endpoint**: `http://localhost:8000/mcp/`
 - **Transport**: ASP.NET Core HTTP
 
+### MCP Client Integration
+
+To use this server with **Claude Desktop**, **VS Code**, or other MCP clients, see [MCP_CLIENT_SETUP.md](MCP_CLIENT_SETUP.md) for detailed configuration instructions.
+
+**Quick Example (Claude Desktop)**:
+
+Add to `claude_desktop_config.json`:
+```json
+{
+  "mcpServers": {
+    "courtlistener": {
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "C:\\path\\to\\CourtListener.MCP.Server\\CourtListener.MCP.Server.csproj",
+        "--api-key",
+        "your-api-key-here"
+      ]
+    }
+  }
+}
+```
+
+Restart Claude Desktop and start asking legal research questions!
+
 ## 💡 Usage Examples
 
 ### Connecting to the Server
