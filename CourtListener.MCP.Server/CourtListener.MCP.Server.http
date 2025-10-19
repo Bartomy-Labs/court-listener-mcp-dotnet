@@ -1,6 +1,0 @@
-@CourtListener.MCP.Server_HostAddress = http://localhost:5124
-
-GET {{CourtListener.MCP.Server_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
