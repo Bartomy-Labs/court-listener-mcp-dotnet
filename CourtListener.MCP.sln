@@ -1,11 +1,20 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31903.59
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11109.219 d18.0-oob
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CourtListener.MCP.Server", "CourtListener.MCP.Server\CourtListener.MCP.Server.csproj", "{07599094-C664-4D04-A1FB-80566EC70150}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CourtListener.MCP.Server.Tests", "CourtListener.MCP.Server.Tests\CourtListener.MCP.Server.Tests.csproj", "{9B242407-A411-42F3-A9E3-AA9811084B4B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{538BF41E-7171-4369-907F-0D2785A301FB}"
+	ProjectSection(SolutionItems) = preProject
+		docker-compose.yml = docker-compose.yml
+		Dockerfile = Dockerfile
+		MCP_CLIENT_SETUP.md = MCP_CLIENT_SETUP.md
+		README.md = README.md
+		RELEASE_NOTES.md = RELEASE_NOTES.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -44,5 +53,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BF3FC3C9-40A5-4B8F-8BED-5E7CB41E2BD0}
 	EndGlobalSection
 EndGlobal

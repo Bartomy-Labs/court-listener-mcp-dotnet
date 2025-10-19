@@ -14,11 +14,11 @@ public static class JsonSerializerConfig
     /// </summary>
     public static JsonSerializerOptions Options { get; } = new JsonSerializerOptions
     {
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         Converters =
         {
-            new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower)
+            new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
         },
         PropertyNameCaseInsensitive = true,
         WriteIndented = false

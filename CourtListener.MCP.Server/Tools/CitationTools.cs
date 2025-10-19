@@ -54,15 +54,15 @@ public class CitationTools
                 { "text", citation }
             };
 
-            // Call API (POST form data)
-            var result = await _client.PostFormAsync<CitationLookupResult>(
+            // Call API (POST form data) - returns an array of results
+            var results = await _client.PostFormAsync<List<CitationLookupResult>>(
                 "citation-lookup/",
                 formData,
                 cancellationToken
             );
 
             // Handle not found
-            if (result == null)
+            if (results == null || results.Count == 0)
             {
                 _logger.LogWarning("No matches found for citation: {Citation}", citation);
                 return new ToolError(
@@ -73,12 +73,16 @@ public class CitationTools
             }
 
             // Log success
+            var totalClusters = results.Sum(r => r.Clusters?.Count ?? 0);
             _logger.LogInformation(
-                "Found {Count} matches for citation: {Citation}",
-                result.Matches?.Count ?? 0,
+                "Found {ResultCount} citation result(s) with {ClusterCount} total cluster(s) for citation: {Citation}",
+                results.Count,
+                totalClusters,
                 citation
             );
-            return result;
+
+            // Return first result for single citation lookup
+            return results[0];
         }
         catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
         {
@@ -151,15 +155,15 @@ public class CitationTools
                 { "text", combinedText }
             };
 
-            // Call API (POST form data)
-            var result = await _client.PostFormAsync<CitationLookupResult>(
+            // Call API (POST form data) - returns an array of results
+            var results = await _client.PostFormAsync<List<CitationLookupResult>>(
                 "citation-lookup/",
                 formData,
                 cancellationToken
             );
 
             // Handle not found
-            if (result == null)
+            if (results == null || results.Count == 0)
             {
                 _logger.LogWarning("No matches found for {Count} citations", citations.Length);
                 return new ToolError(
@@ -170,12 +174,16 @@ public class CitationTools
             }
 
             // Log success
+            var totalClusters = results.Sum(r => r.Clusters?.Count ?? 0);
             _logger.LogInformation(
-                "Found {MatchCount} total matches for {InputCount} citations",
-                result.Matches?.Count ?? 0,
+                "Found {ResultCount} citation result(s) with {ClusterCount} total cluster(s) for {InputCount} input citations",
+                results.Count,
+                totalClusters,
                 citations.Length
             );
-            return result;
+
+            // Return all results for batch lookup
+            return results;
         }
         catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
         {
@@ -479,24 +487,26 @@ public class CitationTools
                 { "text", citation }
             };
 
-            var apiResult = await _client.PostFormAsync<CitationLookupResult>(
+            var apiResults = await _client.PostFormAsync<List<CitationLookupResult>>(
                 "citation-lookup/",
                 formData,
                 cancellationToken
             );
 
             // Step 3: Combine results
+            var totalClusters = apiResults?.Sum(r => r.Clusters?.Count ?? 0) ?? 0;
             _logger.LogInformation(
-                "Enhanced lookup complete: validation={Validated}, matches={MatchCount}",
+                "Enhanced lookup complete: validation={Validated}, results={ResultCount}, clusters={ClusterCount}",
                 parsed != null,
-                apiResult?.Matches?.Count ?? 0
+                apiResults?.Count ?? 0,
+                totalClusters
             );
 
             return new
             {
                 Citation = citation,
                 Validation = validationData,
-                CourtListenerData = apiResult
+                CourtListenerData = apiResults
             };
         }
         catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)

@@ -26,6 +26,7 @@ public static class ServiceCollectionExtensions
         services.AddHttpClient<ICourtListenerClient, CourtListenerClient>((sp, client) =>
         {
             var options = sp.GetRequiredService<IOptions<CourtListenerOptions>>().Value;
+            var logger = sp.GetService<ILogger<CourtListenerClient>>();
 
             // Configure base address and timeout
             client.BaseAddress = new Uri(options.BaseUrl);
@@ -35,6 +36,11 @@ public static class ServiceCollectionExtensions
             if (!string.IsNullOrEmpty(options.ApiKey))
             {
                 client.DefaultRequestHeaders.Add("Authorization", $"Token {options.ApiKey}");
+                logger?.LogInformation("API Key configured (ends with: ...{Last4})", options.ApiKey.Substring(Math.Max(0, options.ApiKey.Length - 4)));
+            }
+            else
+            {
+                logger?.LogWarning("No API key configured!");
             }
 
             // Add user agent

@@ -87,8 +87,8 @@ public class SystemTools
         {
             var stopwatch = Stopwatch.StartNew();
 
-            // Make a simple GET request to the API root
-            await _client.GetAsync<object>("/", cancellationToken);
+            // Make a simple GET request to a lightweight API endpoint (courts list)
+            await _client.GetAsync<object>("courts/?limit=1", cancellationToken);
 
             stopwatch.Stop();
 
@@ -153,7 +153,7 @@ public class SystemTools
         try
         {
             var stopwatch = Stopwatch.StartNew();
-            await _client.GetAsync<object>("/", cancellationToken);
+            await _client.GetAsync<object>("courts/?limit=1", cancellationToken);
             stopwatch.Stop();
 
             checks["CourtListenerApi"] = new
