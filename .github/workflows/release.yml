@@ -1,0 +1,64 @@
+name: Manual Release and Publish
+
+# NOTE: This workflow is for MANUAL releases only.
+# Normal releases are automated via release-please.yml workflow.
+# Use this workflow for emergency releases or manual version control.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.1)'
+        required: true
+        type: string
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET 9
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Determine version
+      id: get_version
+      run: |
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          echo "VERSION=${{ inputs.version }}" >> $GITHUB_OUTPUT
+        else
+          echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --configuration Release --no-restore /p:Version=${{ steps.get_version.outputs.VERSION }}
+
+    - name: Test
+      run: dotnet test --configuration Release --no-build
+
+    - name: Publish Server
+      run: dotnet publish CourtListener.MCP.Server/CourtListener.MCP.Server.csproj --configuration Release --no-build --output ./publish /p:Version=${{ steps.get_version.outputs.VERSION }}
+
+    - name: Create Release Archive
+      run: |
+        cd publish
+        tar -czf ../courtlistener-mcp-server-v${{ steps.get_version.outputs.VERSION }}-linux-x64.tar.gz .
+        cd ..
+
+    - name: Create GitHub Release
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh release create v${{ steps.get_version.outputs.VERSION }} \
+          --title "Release v${{ steps.get_version.outputs.VERSION }}" \
+          --notes "Manual release v${{ steps.get_version.outputs.VERSION }}" \
+          courtlistener-mcp-server-v${{ steps.get_version.outputs.VERSION }}-linux-x64.tar.gz

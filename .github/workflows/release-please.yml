@@ -1,0 +1,61 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: .github/release-please-config.json
+          manifest-file: .github/.release-please-manifest.json
+
+      # The following steps only run if a release was created
+      - uses: actions/checkout@v4
+        if: ${{ steps.release.outputs.release_created }}
+
+      - name: Setup .NET 9
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        if: ${{ steps.release.outputs.release_created }}
+        run: dotnet restore
+
+      - name: Build
+        if: ${{ steps.release.outputs.release_created }}
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Test
+        if: ${{ steps.release.outputs.release_created }}
+        run: dotnet test --configuration Release --no-build --verbosity normal
+
+      - name: Publish Server
+        if: ${{ steps.release.outputs.release_created }}
+        run: dotnet publish CourtListener.MCP.Server/CourtListener.MCP.Server.csproj --configuration Release --no-build --output ./publish
+
+      - name: Create Release Archive
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          cd publish
+          tar -czf ../courtlistener-mcp-server-${{ steps.release.outputs.tag_name }}-linux-x64.tar.gz .
+          cd ..
+
+      - name: Upload Release Artifacts
+        if: ${{ steps.release.outputs.release_created }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload ${{ steps.release.outputs.tag_name }} courtlistener-mcp-server-${{ steps.release.outputs.tag_name }}-linux-x64.tar.gz
