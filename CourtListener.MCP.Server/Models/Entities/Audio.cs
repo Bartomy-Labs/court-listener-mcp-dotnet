@@ -8,7 +8,7 @@ namespace CourtListener.MCP.Server.Models.Entities;
 /// </summary>
 public class Audio
 {
-    public string? Id { get; set; }
+    public int? Id { get; set; }
 
     [JsonPropertyName("absolute_url")]
     public string? AbsoluteUrl { get; set; }

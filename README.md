@@ -1,5 +1,10 @@
 # CourtListener MCP Server - .NET 9 Implementation
 
+[![Build and Test - Master](https://github.com/Bartomy-Labs/court-listener-mcp-dotnet/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/Bartomy-Labs/court-listener-mcp-dotnet/actions/workflows/build.yml)
+[![Build and Test - Develop](https://github.com/Bartomy-Labs/court-listener-mcp-dotnet/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/Bartomy-Labs/court-listener-mcp-dotnet/actions/workflows/build.yml)
+[![.NET Version](https://img.shields.io/badge/.NET-9.0-512BD4)](https://dotnet.microsoft.com/download/dotnet/9.0)
+[![License](https://img.shields.io/badge/license-TBD-blue)](LICENSE)
+
 **Version**: 1.0.0
 **Framework**: .NET 9 with C# MCP SDK
 **Based On**: Python implementation at [court-listener-mcp](https://github.com/Travis-Prall/court-listener-mcp)
