@@ -38,7 +38,7 @@ public class SearchTools
         [Description("Filed before date (YYYY-MM-DD)")] string? filedBefore = null,
         [Description("Minimum citation count")] int? citedGt = null,
         [Description("Maximum citation count")] int? citedLt = null,
-        [Description("Sort order field")] string? orderBy = null,
+        [Description("Sort order - must include direction (e.g., 'score desc', 'dateFiled desc', 'dateFiled asc')")] string? orderBy = "score desc",
         [Description("Maximum results to return (1-100)")] int limit = 20,
         CancellationToken cancellationToken = default)
     {
@@ -220,7 +220,7 @@ public class SearchTools
         [Description("Filed after date (YYYY-MM-DD)")] string? dateFiledAfter = null,
         [Description("Filed before date (YYYY-MM-DD)")] string? dateFiledBefore = null,
         [Description("Party name to filter by")] string? partyName = null,
-        [Description("Sort order field")] string? orderBy = null,
+        [Description("Sort order - must include direction (e.g., 'score desc', 'dateFiled desc', 'dateFiled asc')")] string? orderBy = "score desc",
         [Description("Maximum results to return (1-100)")] int limit = 20,
         CancellationToken cancellationToken = default)
     {
@@ -352,7 +352,7 @@ public class SearchTools
         [Description("Filed after date (YYYY-MM-DD)")] string? dateFiledAfter = null,
         [Description("Filed before date (YYYY-MM-DD)")] string? dateFiledBefore = null,
         [Description("Party name to filter by")] string? partyName = null,
-        [Description("Sort order field")] string? orderBy = null,
+        [Description("Sort order - must include direction (e.g., 'score desc', 'dateFiled desc', 'dateFiled asc')")] string? orderBy = "score desc",
         [Description("Maximum results to return (1-100)")] int limit = 20,
         CancellationToken cancellationToken = default)
     {
@@ -526,12 +526,6 @@ public class SearchTools
         [Description("Search query text")] string query,
         [Description("Court identifier")] string? court = null,
         [Description("Case name to search for")] string? caseName = null,
-        [Description("Docket number")] string? docketNumber = null,
-        [Description("Document number")] string? documentNumber = null,
-        [Description("Attachment number")] string? attachmentNumber = null,
-        [Description("Filed after date (YYYY-MM-DD)")] string? dateFiledAfter = null,
-        [Description("Filed before date (YYYY-MM-DD)")] string? dateFiledBefore = null,
-        [Description("Sort order field")] string? orderBy = null,
         [Description("Maximum results to return (1-100)")] int limit = 20,
         CancellationToken cancellationToken = default)
     {
@@ -554,25 +548,6 @@ public class SearchTools
             ));
         }
 
-        // Validate date formats if provided
-        if (!string.IsNullOrEmpty(dateFiledAfter) && !IsValidDateFormat(dateFiledAfter))
-        {
-            return JsonSerializer.Serialize(new ToolError(
-                ErrorTypes.ValidationError,
-                "Invalid dateFiledAfter date format",
-                "Use YYYY-MM-DD format (e.g., 2024-01-15)"
-            ));
-        }
-
-        if (!string.IsNullOrEmpty(dateFiledBefore) && !IsValidDateFormat(dateFiledBefore))
-        {
-            return JsonSerializer.Serialize(new ToolError(
-                ErrorTypes.ValidationError,
-                "Invalid dateFiledBefore date format",
-                "Use YYYY-MM-DD format (e.g., 2024-12-31)"
-            ));
-        }
-
         // Log request
         _logger.LogInformation(
             "Searching RECAP documents: Query={Query}, Court={Court}, Limit={Limit}",
@@ -588,12 +563,6 @@ public class SearchTools
                 query,
                 court,
                 caseName,
-                docketNumber,
-                documentNumber,
-                attachmentNumber,
-                dateFiledAfter,
-                dateFiledBefore,
-                orderBy,
                 limit
             );
 
@@ -662,7 +631,7 @@ public class SearchTools
         [Description("Judge name to filter by")] string? judge = null,
         [Description("Argued after date (YYYY-MM-DD)")] string? arguedAfter = null,
         [Description("Argued before date (YYYY-MM-DD)")] string? arguedBefore = null,
-        [Description("Sort order field")] string? orderBy = null,
+        [Description("Sort order - must include direction (e.g., 'score desc', 'dateFiled desc', 'dateFiled asc')")] string? orderBy = "score desc",
         [Description("Maximum results to return (1-100)")] int limit = 20,
         CancellationToken cancellationToken = default)
     {
@@ -791,7 +760,7 @@ public class SearchTools
         [Description("School attended")] string? school = null,
         [Description("Appointed by (president name)")] string? appointedBy = null,
         [Description("Selection method (e.g., appointed, elected)")] string? selectionMethod = null,
-        [Description("Sort order field")] string? orderBy = null,
+        [Description("Sort order - must include direction (e.g., 'score desc', 'dateFiled desc', 'dateFiled asc')")] string? orderBy = "score desc",
         [Description("Maximum results to return (1-100)")] int limit = 20,
         CancellationToken cancellationToken = default)
     {
@@ -895,12 +864,6 @@ public class SearchTools
         string query,
         string? court,
         string? caseName,
-        string? docketNumber,
-        string? documentNumber,
-        string? attachmentNumber,
-        string? dateFiledAfter,
-        string? dateFiledBefore,
-        string? orderBy,
         int limit)
     {
         var queryParams = new List<string>
@@ -915,24 +878,6 @@ public class SearchTools
 
         if (!string.IsNullOrEmpty(caseName))
             queryParams.Add($"case_name={Uri.EscapeDataString(caseName)}");
-
-        if (!string.IsNullOrEmpty(docketNumber))
-            queryParams.Add($"docket_number={Uri.EscapeDataString(docketNumber)}");
-
-        if (!string.IsNullOrEmpty(documentNumber))
-            queryParams.Add($"document_number={Uri.EscapeDataString(documentNumber)}");
-
-        if (!string.IsNullOrEmpty(attachmentNumber))
-            queryParams.Add($"attachment_number={Uri.EscapeDataString(attachmentNumber)}");
-
-        if (!string.IsNullOrEmpty(dateFiledAfter))
-            queryParams.Add($"date_filed_after={dateFiledAfter}");
-
-        if (!string.IsNullOrEmpty(dateFiledBefore))
-            queryParams.Add($"date_filed_before={dateFiledBefore}");
-
-        if (!string.IsNullOrEmpty(orderBy))
-            queryParams.Add($"order_by={Uri.EscapeDataString(orderBy)}");
 
         return $"search/?{string.Join("&", queryParams)}";
     }

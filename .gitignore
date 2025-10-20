@@ -403,10 +403,13 @@ FodyWeavers.xsd
 # Local secrets file for ASP.NET Core projects
 **/secrets.json
 
-# Local directories and files 
+# Local directories and files
 .sessionContexts/*
 .orchestrators/
 .featurePlans/
 .claude/
 Api_Responses/
+
+# Temporary error files
+nul
 
