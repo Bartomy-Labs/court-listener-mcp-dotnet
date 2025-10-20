@@ -41,8 +41,8 @@ The CourtListener MCP Server provides comprehensive access to **legal case data 
 
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd court-listener-mcp
+git clone https://github.com/Bartomy-Labs/court-listener-mcp-dotnet.git
+cd court-listener-mcp-dotnet
 
 # Restore dependencies
 dotnet restore
@@ -242,28 +242,13 @@ For detailed testing documentation, writing new tests, and coverage reports, see
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please follow these guidelines:
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on:
 
-### Code Style
-- Follow C# coding conventions
-- Use nullable reference types
-- Add XML documentation comments to public APIs
-- Maintain test coverage above 70%
-
-### Pull Request Process
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes with tests
-4. Run tests and ensure they pass (`dotnet test`)
-5. Format code (`dotnet format`)
-6. Commit your changes (`git commit -m 'Add amazing feature'`)
-7. Push to your branch (`git push origin feature/amazing-feature`)
-8. Open a Pull Request
-
-### Testing Requirements
-- All new features must include unit tests
-- Maintain or improve code coverage
-- All tests must pass before PR approval
+- Development workflow and setup
+- Conventional commit message format
+- Code style and testing requirements
+- Pull request process
+- Release management
 
 ## 📄 License
 
