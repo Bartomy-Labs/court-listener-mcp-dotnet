@@ -413,3 +413,6 @@ Api_Responses/
 # Temporary error files
 nul
 
+# MCP configuration (dev-only)
+.mcp.json
+

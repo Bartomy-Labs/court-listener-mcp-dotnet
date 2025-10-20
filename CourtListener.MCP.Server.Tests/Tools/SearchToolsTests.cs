@@ -32,7 +32,7 @@ public class SearchToolsTests
             .ReturnsAsync(new { count = 1, results = new[] { new { id = 123, case_name = "Test v. Case" } } });
 
         // Act
-        var result = await _searchTools.SearchOpinions("test query");
+        var result = await _searchTools.SearchOpinions("test query", cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -45,7 +45,7 @@ public class SearchToolsTests
     public async Task SearchOpinions_WithEmptyQuery_ReturnsError()
     {
         // Act
-        var result = await _searchTools.SearchOpinions("");
+        var result = await _searchTools.SearchOpinions("", cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -59,7 +59,7 @@ public class SearchToolsTests
     public async Task SearchOpinions_WithInvalidLimit_ReturnsError()
     {
         // Act
-        var result = await _searchTools.SearchOpinions("test", limit: 150);
+        var result = await _searchTools.SearchOpinions("test", limit: 150, cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);

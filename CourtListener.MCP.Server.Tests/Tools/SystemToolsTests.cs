@@ -42,7 +42,7 @@ public class SystemToolsTests
             .ReturnsAsync(new object());
 
         // Act
-        var result = await _systemTools.GetApiStatus();
+        var result = await _systemTools.GetApiStatus(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -62,7 +62,7 @@ public class SystemToolsTests
             .ReturnsAsync(new object());
 
         // Act
-        var result = await _systemTools.HealthCheck();
+        var result = await _systemTools.HealthCheck(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
